@@ -61,7 +61,23 @@ if len(records) != 20:
 mean = statistics.mean(records)
 sd = statistics.stdev(records)
 change = today - mean
+def time_text(hours):
+    total_minutes = round(abs(hours) * 60)
+    h, m = divmod(total_minutes, 60)
 
+    if h == 0:
+        return f"{m}분"
+    if m == 0:
+        return f"{h}시간"
+    return f"{h}시간 {m}분"
+
+
+def change_text(hours):
+    if hours < 0:
+        return f"−{time_text(hours)}"
+    if hours > 0:
+        return f"+{time_text(hours)}"
+    return "0분"
 # 두 기준의 판단 결과를 각각 보존합니다.
 a = int(today < 6.0)
 b = None if sd == 0 else int((today - mean) / sd <= -2.0)
@@ -70,18 +86,23 @@ c = None if b is None else a + b
 
 st.subheader("2. 평소 기록과 비교")
 col1, col2, col3 = st.columns(3)
-col1.metric("이전 20일 평균", f"{mean:.2f}시간")
-col2.metric("오늘 사용시간", f"{today:.2f}시간")
-col3.metric("평균과의 차이", f"{change:+.2f}시간")
+col1.metric("이전 20일 평균", time_text(mean))
+col2.metric("오늘 사용시간", time_text(today))
+col3.metric("평균과의 차이", change_text(change))
+st.caption("시간·분 표시는 분 단위로 반올림하며, 판단에는 반올림 전 값을 사용합니다.")
 
 st.subheader("3. 오늘 기록의 의미")
 
 if change < 0:
-    st.write(f"오늘은 평소 평균보다 **{abs(change):.2f}시간 적게** 사용했습니다.")
+    st.write(
+        f"오늘은 이전 20일 평균보다 **{time_text(change)} 적게** 사용했습니다."
+    )
 elif change > 0:
-    st.write(f"오늘은 평소 평균보다 **{change:.2f}시간 많이** 사용했습니다.")
+    st.write(
+        f"오늘은 이전 20일 평균보다 **{time_text(change)} 많이** 사용했습니다."
+    )
 else:
-    st.write("오늘 사용시간은 **평소 평균과 같습니다.**")
+    st.write("오늘 사용시간은 **이전 20일 평균과 같습니다.**")
 
 with st.expander("왜 이런 결과가 나타났나요?", expanded=True):
     if b is None:
